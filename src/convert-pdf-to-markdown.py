@@ -13,7 +13,7 @@ if __name__ == '__main__':
     rendered = converter("slides\\1-software-udvikling.pdf")
     text, _, image_map = text_from_rendered(rendered)
 
-    output_folder = "output"
+    output_folder = "output\\markdown\\"
     os.makedirs(output_folder, exist_ok=True)
 
     # Save text to a file
