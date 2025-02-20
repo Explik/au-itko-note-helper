@@ -46,10 +46,17 @@ def segment_html(file_path: str, output_dir: str):
     for page in pages:
         page_id = page.get("data-page-id")
         if page_id:
-            output_file_path = os.path.join(html_folder_path, f"page_{page_id}.html")
-            with open(output_file_path, "w", encoding="utf-8") as output_file:
+
+            # Create new HTML file
+            output_html_file_path = os.path.join(html_folder_path, f"page_{page_id}.html")
+            with open(output_html_file_path, "w", encoding="utf-8") as output_file:
                 for child in page.children:
                     output_file.write(str(child))
+
+            output_text_file_path = os.path.join(html_folder_path, f"page_{page_id}.txt")
+            with open(output_text_file_path, "w", encoding="utf-8") as output_file:
+                page_text = page.get_text().replace("  ", " ").strip()
+                output_file.write(page_text)
 
 def rename_output_folder(file_path: str, output_dir: str):
     # Find generated HTML file
@@ -67,7 +74,7 @@ if __name__ == "__main__":
     file_path = ".\\slides\\1-software-udvikling.pdf"
     output_dir = ".\\output"
 
-    #generate_html(file_path, output_dir)
+    generate_html(file_path, output_dir)
     segment_html(file_path, output_dir)
     rename_output_folder(file_path, output_dir)
     
