@@ -93,48 +93,54 @@ def load_data_file(file_path):
     return replace_separators(old_data)
 
 # PDF extraction functions
-def extract_screenshots(pdf_file_path, output_dir): 
+def extract_screenshots(pdf_file_path, working_dir, output_dir): 
     # Store Pdf with convert_from_path function
     images = convert_from_path(pdf_file_path)
 
     # Create directory if it doesn't exist
-    create_dir_if_not_exists(output_dir)
+    create_dir_if_not_exists(os.path.join(working_dir, output_dir))
 
     # Save PDF pages as images in output directory
     buffer = []
     for i in range(len(images)):
-        image_file_name = os.path.join(output_dir, 'page_'+ str(i) +'.jpg')
-        images[i].save(image_file_name, 'JPEG')
+        image_file_name = 'page_'+ str(i) +'.jpg'
+        images[i].save(
+            os.path.join(working_dir, output_dir, image_file_name), 
+            'JPEG')
 
-        page_details = create_page_details(i, { "screenshot-file": image_file_name })
+        page_details = create_page_details(i, { 
+            "screenshot-file": os.path.join(output_dir, image_file_name) 
+        })
         buffer.append(page_details)
 
     return buffer
 
-def extract_plain_text(pdf_file_path, output_dir): 
+def extract_plain_text(pdf_file_path, working_dir, output_dir): 
     # Initialize PdfReader
     pdf_reader = PdfReader(pdf_file_path)
 
     # Create output folder if it doesn't exist
-    create_dir_if_not_exists(output_dir)
+    create_dir_if_not_exists(os.path.join(working_dir, output_dir))
 
     # Save PDF pages as text files in output directory
     buffer = []
     for i, page in enumerate(pdf_reader.pages, start=0):
-        file_path = os.path.join(output_dir, f"page_{i}.txt")
+        file_name = f"page_{i}.txt"
         file_content = page.extract_text()
         
-        with open(file_path, "w", encoding="utf-8") as f:
+        with open(os.path.join(working_dir, output_dir, file_name), "w", encoding="utf-8") as f:
             f.write(file_content)
         
-        page_details = create_page_details(i, { "text-file": file_path })
+        page_details = create_page_details(i, { 
+            "text-file": os.path.join(output_dir, file_name)
+        })
         buffer.append(page_details)
     
     return buffer
 
-def extract_rich_text(pdf_file_path, output_dir): 
-    html_file_name = generate_single_html_file(pdf_file_path, output_dir)
-    html_file_names = split_single_html_file(html_file_name, os.path.join(output_dir, 'html'))
+def extract_rich_text(pdf_file_path, working_dir, output_dir): 
+    html_file_name = generate_single_html_file(pdf_file_path, working_dir)
+    html_file_names = split_single_html_file(html_file_name, working_dir, output_dir)
     
     return html_file_names
 
@@ -169,7 +175,7 @@ def generate_single_html_file(pdf_file_path: str, output_dir: str):
     # Return HTML file path
     return os.path.join(new_html_folder_path, file_name_without_ext + ".html")
 
-def split_single_html_file(html_file_path: str, output_dir: str):
+def split_single_html_file(html_file_path: str, working_dir: str, output_dir: str):
     if (os.path.exists(html_file_path) == False):
         raise ValueError("The HTML file does not exist.")
     
@@ -186,13 +192,15 @@ def split_single_html_file(html_file_path: str, output_dir: str):
         page_id = page.get("data-page-id")
         if page_id:
             # Create new HTML file
-            output_html_file_path = os.path.join(output_dir, f"page_{page_id}.html")
+            output_html_file_name = f"page_{page_id}.html"
+            output_html_file_path = os.path.join(working_dir, output_dir, output_html_file_name)
             with open(output_html_file_path, "w", encoding="utf-8") as output_file:
                 for child in page.children:
                     output_file.write(str(child))
 
             # Create new text file
-            output_text_file_path = os.path.join(output_dir, f"page_{page_id}.txt")
+            output_text_file_name = f"page_{page_id}.txt"
+            output_text_file_path = os.path.join(working_dir, output_dir, output_text_file_name)
             with open(output_text_file_path, "w", encoding="utf-8") as output_file:
                 page_text = page.get_text().replace("  ", " ").strip()
                 output_file.write(page_text)
@@ -215,8 +223,8 @@ def split_single_html_file(html_file_path: str, output_dir: str):
 
             # Create page details 
             page_details = create_page_details(int(page_id), { 
-                "html-file": output_html_file_path, 
-                "text-file": output_text_file_path,
+                "html-file": os.path.join(output_dir, output_html_file_name), 
+                "text-file": os.path.join(output_dir, output_text_file_name),
                 "image-files": image_file_paths,
                 "first-heading": first_heading
             })

@@ -11,13 +11,13 @@ pdf_file_dir = os.path.dirname(pdf_file_path)
 output_dir = os.path.join(".", "output", str(uuid.uuid4()))
 
 # Extract screenshots, plain text, and rich text from PDF
-screenshot_pages = extract_screenshots(pdf_file_path, os.path.join(output_dir, 'screenshots'))
+screenshot_pages = extract_screenshots(pdf_file_path, output_dir, 'screenshots')
 print("Screenshots extracted")
 
-plain_text_pages = extract_plain_text(pdf_file_path, os.path.join(output_dir, 'text'))
+plain_text_pages = extract_plain_text(pdf_file_path, output_dir, 'text')
 print("Plain text extracted")
 
-rich_text_pages = extract_rich_text(pdf_file_path, output_dir)
+rich_text_pages = extract_rich_text(pdf_file_path, output_dir, 'html')
 print("Rich text extracted")
 
 # Combine all extraction data into a single JSON file

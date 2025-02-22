@@ -13,12 +13,18 @@ import zipfile
 st.set_page_config(layout="wide")
 
 def text_file_to_html(text_path):
+    working_dir = get_working_dir()
+    text_path = os.path.join(working_dir, text_path)
+
     with open(text_path, "r", encoding="utf-8") as text_file:
         content = text_file.read()
 
     return f"""<p> {content} </p> """
 
 def image_file_to_html(image_path):
+    working_dir = get_working_dir()
+    image_path = os.path.join(working_dir, image_path)
+
     with open(image_path, "rb") as image_file:
         encoded_string = base64.b64encode(image_file.read()).decode()
 
@@ -29,6 +35,9 @@ def image_files_to_html(image_paths):
     return html.replace('style="width:100%;"', 'style="display: block; margin-bottom: 10px;"')
 
 def html_file_to_html(html_path):
+    working_dir = get_working_dir()
+    html_path = os.path.join(working_dir, html_path)
+
     with open(html_path, "r", encoding="utf-8") as html_file:
         html_content = html_file.read()
 
@@ -37,6 +46,7 @@ def html_file_to_html(html_path):
         img_tags = re.findall(r'<img src="([^"]+)"', html_content)
         for img_tag in img_tags:
             img_path = folder / img_tag
+            
             if img_path.exists():
                 with open(img_path, "rb") as img_file:
                     encoded_string = base64.b64encode(img_file.read()).decode()
