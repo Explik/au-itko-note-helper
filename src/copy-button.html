@@ -97,8 +97,20 @@
         });
 
         navigator.clipboard.write([clipboardItem])
-        .then(() => console.log("clipboard.write() Ok"))
+        .then(displaySuccess)
         .catch(error => alert(error))
+    }
+
+    function displaySuccess() {
+        const button = document.querySelector('button');
+        const originalText = button.innerText;
+        button.innerText = 'Copied!';
+        
+        setTimeout(() => {
+            button.innerText = originalText;
+        }, 1500);
+
+        console.log("Copied to clipboard successfully");
     }
 </script>
 
