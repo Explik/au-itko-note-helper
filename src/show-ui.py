@@ -1,15 +1,10 @@
 import streamlit as st
 import base64
 import json
+import re
+from pathlib import Path
 
 st.set_page_config(layout="wide")
-
-def page_to_html(page, number_of_pages):
-    image_path = page['screenshot-file']
-    with open(image_path, "rb") as image_file:
-        encoded_string = base64.b64encode(image_file.read()).decode()
-
-    return f"""<img src="data:image/png;base64,{encoded_string}" style="width:100%;"><p>Page {page['page_number']} / {number_of_pages}"""
 
 def text_file_to_html(text_path):
     with open(text_path, "r", encoding="utf-8") as text_file:
@@ -26,6 +21,21 @@ def image_file_to_html(image_path):
 def html_file_to_html(html_path):
     with open(html_path, "r", encoding="utf-8") as html_file:
         html_content = html_file.read()
+
+    def replace_img_tags(html_content, html_path):
+        folder = Path(html_path).parent
+        img_tags = re.findall(r'<img src="([^"]+)"', html_content)
+        for img_tag in img_tags:
+            img_path = folder / img_tag
+            if img_path.exists():
+                with open(img_path, "rb") as img_file:
+                    encoded_string = base64.b64encode(img_file.read()).decode()
+                inline_img_tag = f'<img src="data:image/jpeg;base64,{encoded_string}"">'
+                html_content = html_content.replace(f'<img src="{img_tag}"/>', inline_img_tag)
+        return html_content
+
+    html_content = replace_img_tags(html_content, html_path)
+
     return html_content
 
 def create_copy_button(text, html_content):
@@ -51,9 +61,7 @@ def create_copy_image_button(text):
 
 def create_copy_button_source(text): 
     html_path = get_current_page()['html-file']
-
-    with open(html_path, "r", encoding="utf-8") as html_file:
-        html_content = html_file.read()
+    html_content = html_file_to_html(html_path)
 
     return create_copy_button(text, html_content)
 
@@ -106,7 +114,7 @@ def get_current_page_html():
     if mode == "html":
         return html_file_to_html(get_current_page()['html-file'])
 
-    return page_to_html(get_current_page(), len(page_details))
+    return "Error, invalid mode"
 
 def get_number_of_pages():
     return len(page_details)
