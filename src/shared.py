@@ -12,9 +12,10 @@ def create_dir_if_not_exists(dir_path):
 
 def delete_dir_if_exists(dir_path):
     assert dir_path not in ['/', '\\'], "Cannot delete root directory."
-    assert os.path.isdir(dir_path), f"{dir_path} is not a directory."
-
+    
     if os.path.exists(dir_path):
+        assert os.path.isdir(dir_path), f"{dir_path} is not a directory."
+
         for root, dirs, files in os.walk(dir_path):
             for file in files:
                 os.remove(os.path.join(root, file))
@@ -31,6 +32,37 @@ def run_command(command):
 
     return process.wait()
 
+# page_number is 0-based
+def create_page_details(page_number, properties): 
+    # Create page details object
+    page_details = {
+        "page_number": page_number + 1,
+    }
+
+    # Attach properties to object
+    for key, value in properties.items():
+        page_details[key] = value
+
+    return page_details
+
+def combine_page_details(*pages_list: list[list[dict]]): 
+    buffer_map = { }
+
+    # Combine pages from all lists
+    for pages in pages_list:
+        for page in pages:
+            page_number = page["page_number"]
+            if page_number in buffer_map:
+                buffer_map[page_number].update(page)
+            else:
+                buffer_map[page_number] = page.copy()
+
+    # Sort pages by page number
+    buffer_list = list(buffer_map.values())
+    buffer_list.sort(key=lambda x: x["page_number"])
+
+    return buffer_list
+
 # PDF extraction functions
 def extract_screenshots(pdf_file_path, output_dir): 
     # Store Pdf with convert_from_path function
@@ -45,7 +77,8 @@ def extract_screenshots(pdf_file_path, output_dir):
         image_file_name = output_dir + '/page_'+ str(i) +'.jpg'
         images[i].save(image_file_name, 'JPEG')
 
-        buffer.append(image_file_name)
+        page_details = create_page_details(i, { "screenshot-file": image_file_name })
+        buffer.append(page_details)
 
     return buffer
 
@@ -65,13 +98,14 @@ def extract_plain_text(pdf_file_path, output_dir):
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(file_content)
         
-        buffer.append(file_path)
+        page_details = create_page_details(i, { "text-file": file_path })
+        buffer.append(page_details)
     
     return buffer
 
 def extract_rich_text(pdf_file_path, output_dir): 
     html_file_name = generate_single_html_file(pdf_file_path, output_dir)
-    html_file_names = split_single_html_file(html_file_name, output_dir)
+    html_file_names = split_single_html_file(html_file_name, os.path.join(output_dir, 'html'))
     
     return html_file_names
 
@@ -127,12 +161,18 @@ def split_single_html_file(html_file_path: str, output_dir: str):
             with open(output_html_file_path, "w", encoding="utf-8") as output_file:
                 for child in page.children:
                     output_file.write(str(child))
-            buffer.append(output_html_file_path)
 
             # Create new text file
             output_text_file_path = os.path.join(output_dir, f"page_{page_id}.txt")
             with open(output_text_file_path, "w", encoding="utf-8") as output_file:
                 page_text = page.get_text().replace("  ", " ").strip()
                 output_file.write(page_text)
+
+            # Create page details 
+            page_details = create_page_details(int(page_id), { 
+                "html-file": output_html_file_path, 
+                "text-file": output_text_file_path 
+            })
+            buffer.append(page_details)
 
     return buffer
