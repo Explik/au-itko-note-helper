@@ -1,3 +1,4 @@
 marker-pdf
 pdf2image
 pypdf
+streamlit
