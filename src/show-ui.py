@@ -2,6 +2,8 @@ import streamlit as st
 import base64
 import json
 
+st.set_page_config(layout="wide")
+
 def page_to_html(page, number_of_pages):
     image_path = page['screenshot-file']
     with open(image_path, "rb") as image_file:
@@ -136,7 +138,7 @@ def handle_page_input_change():
 main_col1, main_col2, main_col3 = st.columns([3, 1, 1])
 
 with main_col1:
-    st.markdown(f"<div style='border: 2px solid black; padding: 10px;'>{get_current_page_html()}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='border: 2px solid black; padding: 10px; height: 500px; overflow-y: scroll'>{get_current_page_html()}</div>", unsafe_allow_html=True)
     st.text("")
 
     # Navigation buttons
@@ -146,7 +148,7 @@ with main_col1:
 
     with col2:
         st.text_input(
-            "", 
+            "Page number", 
             f"{get_current_index() + 1} / {get_number_of_pages()}", 
             key="page_input", 
             label_visibility="collapsed",
