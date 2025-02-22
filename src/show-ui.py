@@ -19,7 +19,8 @@ def image_file_to_html(image_path):
     return f"""<img src="data:image/png;base64,{encoded_string}" style="width:100%;">"""
 
 def image_files_to_html(image_paths):
-    return "".join([image_file_to_html(image_path) for image_path in image_paths])
+    html = "".join([image_file_to_html(image_path) for image_path in image_paths])
+    return html.replace('style="width:100%;"', 'style="display: block; margin-bottom: 10px;"')
 
 def html_file_to_html(html_path):
     with open(html_path, "r", encoding="utf-8") as html_file:
@@ -181,7 +182,7 @@ with main_col2:
     st.components.v1.html(create_copy_text_button("Copy text-only"), height=32)
     st.components.v1.html(create_copy_images_button("Copy images-only"), height=32)
 
-    st.checkbox("Default view", True, key="default_view")
+    st.checkbox("Use default view (screenshot)", True, key="default_view")
     
 with main_col3: 
     st.button("View", key="view_image", disabled=get_mode() == "screenshot", on_click=lambda: set_mode("screenshot"))
