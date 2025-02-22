@@ -138,6 +138,18 @@ def start_processing_any_file(file_path):
     
     raise ValueError("Invalid file type")
 
+def download_working_dir_as_zip():
+    working_dir = get_working_dir()
+    zip_file_name = os.path.basename(working_dir) + ".zip"
+
+    with zipfile.ZipFile(zip_file_name, 'w') as zip_ref:
+        for root, dirs, files in os.walk(working_dir):
+            for file in files:
+                zip_ref.write(os.path.join(root, file), os.path.relpath(os.path.join(root, file), working_dir))
+
+    with open(zip_file_name, 'rb') as file:
+        return file.read()
+        
 # SessionState 
 # - page_index: index of the current page
 # - mode: current mode (screenshot, text, images, html)
@@ -261,10 +273,21 @@ if working_dir is None:
 
 # Display PDF page
 else: 
-    st.markdown("# " + file_name)
+    # Header
+    header_col1, header_col2 = st.columns([3, 1], vertical_alignment="bottom")
+    
+    with header_col1:
+        st.markdown("# " + file_name)
+        
+    
+    with header_col2:
+        st.download_button("Download as ZIP", data=download_working_dir_as_zip(), file_name=file_name.replace(".pdf", "-pdf") + ".zip", mime="application/zip")
 
+    # Padding between header and main content
+    st.text("")
+
+    # Main content
     main_col1, main_col2, main_col3 = st.columns([3, 1, 1])
-
     with main_col1:
         st.markdown(f"<div style='border: 2px solid black; padding: 10px; height: 500px; overflow-y: scroll'>{get_current_page_html()}</div>", unsafe_allow_html=True)
         st.text("")
