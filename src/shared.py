@@ -80,10 +80,17 @@ def load_data_file(file_path):
     old_directory_separator = old_data.get("directory_separator")
     new_directory_separator = os.path.sep
 
-    new_json = json.dumps(old_data).replace(old_directory_separator, new_directory_separator)
-    new_data = json.loads(new_json)
+    def replace_separators(obj):
+        if isinstance(obj, dict):
+            return {k: replace_separators(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [replace_separators(elem) for elem in obj]
+        elif isinstance(obj, str):
+            return obj.replace(old_directory_separator, new_directory_separator)
+        else:
+            return obj
 
-    return new_data
+    return replace_separators(old_data)
 
 # PDF extraction functions
 def extract_screenshots(pdf_file_path, output_dir): 
