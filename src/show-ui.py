@@ -2,19 +2,21 @@ import streamlit as st
 import os
 from PIL import Image
 import base64
+import json
 
-# Function to convert image to HTML
-def image_to_html(image_path):
+def page_to_html(page, number_of_pages):
+    image_path = page['screenshot-file']
     with open(image_path, "rb") as image_file:
         encoded_string = base64.b64encode(image_file.read()).decode()
-    return f'<img src="data:image/png;base64,{encoded_string}" style="width:100%;">'
 
-# Get list of image files in the directory
-image_folder = './output/screenshots'
-image_files = [os.path.join(image_folder, file) for file in os.listdir(image_folder) if file.endswith(('png', 'jpg', 'jpeg'))]
+    return f"""<img src="data:image/png;base64,{encoded_string}" style="width:100%;"><p>Page {page['page_number']} / {number_of_pages}"""
 
-# Generate HTML pages from images
-pages = [image_to_html(image_file) for image_file in image_files]
+# Load data 
+page_details = None 
+with open('./output/pages.json', 'r') as file:
+    page_details = json.load(file)
+
+pages = [page_to_html(page, len(page_details)) for page in page_details]
 
 # Initialize session state for page index
 if 'page_index' not in st.session_state:

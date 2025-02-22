@@ -1,0 +1,28 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Script",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/convert_single.py",
+            "console": "integratedTerminal",
+            "args": [
+                "C:\\Users\\dxied\\source\\repos\\au-itko-note-helper\\slides\\1-software-udvikling.pdf",
+                "--output_format=json"
+            ],
+            "justMyCode": false
+        }
+    ]
+}
