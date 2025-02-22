@@ -1,12 +1,6 @@
 import streamlit as st
-import os
-from PIL import Image
 import base64
 import json
-import pyperclip
-import win32clipboard
-from io import BytesIO
-from PIL import Image
 
 def page_to_html(page, number_of_pages):
     image_path = page['screenshot-file']
@@ -15,46 +9,23 @@ def page_to_html(page, number_of_pages):
 
     return f"""<img src="data:image/png;base64,{encoded_string}" style="width:100%;"><p>Page {page['page_number']} / {number_of_pages}"""
 
-def copy_image_to_clipboard(image_path):
-    # WINDOWS ONLY
-    image = Image.open(image_path)
-    
-    output = BytesIO()
-    image.convert("RGB").save(output, "BMP")
-    data = output.getvalue()[14:]
-    output.close()
 
-    win32clipboard.OpenClipboard()
-    win32clipboard.EmptyClipboard()
-    win32clipboard.SetClipboardData(win32clipboard.CF_DIB, data)
-    win32clipboard.CloseClipboard()
+def create_copy_button_html(key, text, content): 
+    copy_script = """
+    <script>
+        function copyToClipboardFor{key}() {
+            navigator.clipboard.writeText({content}).then(function() {
+                console.log('Copied to clipboard successfully!');
+            }).catch(function(err) {
+                console.error('Could not copy text: ', err);
+            });
+        }
+    </script>
 
-def copy_text_to_clipboard(text): 
-    pyperclip.copy(text)
+    <button onclick="copyToClipboardFor{key}()">{text}</button>
+    """
 
-def copy_html_to_clipboard(html):
-    pyperclip.copy(html)
-
-def handle_copy_screenshot(): 
-    current_page = get_current_page()
-    image_path = current_page['screenshot-file']
-    copy_image_to_clipboard(image_path)
-
-def handle_copy_text_only(): 
-    current_page = get_current_page()
-    text_path = current_page['text-file']
-
-    with open(text_path, 'r') as file:
-        text = file.read()
-        copy_text_to_clipboard(text)
-
-def handle_copy_html():
-    current_page = get_current_page()
-    html_path = current_page['html-file']
-
-    with open(html_path, 'r') as file:
-        page_html = file.read()
-        copy_html_to_clipboard(page_html)
+    return copy_script.replace("{content}", json.dumps(content)).replace("{text}", text).replace("{key}", key)
 
 # Load data 
 page_details = None 
@@ -94,6 +65,5 @@ with main_col1:
             navigate('next')
 
 with main_col2:
-    st.button("Copy screenshot", use_container_width=True, on_click=handle_copy_screenshot)
-    st.button("Copy HTML", use_container_width=True, on_click=handle_copy_html)
-    st.button("Copy text-only", use_container_width=True, on_click=handle_copy_text_only)
+    st.components.v1.html(create_copy_button_html("copy_1", "Copy", "Hello world"), height=50)
+    st.components.v1.html(create_copy_button_html("copy_2", "Copy", "Hello world 2"), height=50)
