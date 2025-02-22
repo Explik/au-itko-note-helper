@@ -91,7 +91,7 @@ def create_copy_html_button_source(text):
 def start_processing_pdf_file(pdf_file_path):
     pdf_file_name = os.path.basename(pdf_file_path)
 
-    output_dir = ".\\output\\" + str(uuid.uuid4())
+    output_dir = os.path.join(".\\output", str(uuid.uuid4()))
     create_dir_if_not_exists(output_dir)
 
     st.markdown("### Processing file...")
@@ -121,7 +121,7 @@ def start_processing_pdf_file(pdf_file_path):
     st.rerun()
 
 def start_processing_zip_file(zip_file_path):
-    output_dir = ".\\output\\" + str(uuid.uuid4())
+    output_dir = os.path.join(".\\output\\", str(uuid.uuid4()))
     create_dir_if_not_exists(output_dir)
 
     with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:

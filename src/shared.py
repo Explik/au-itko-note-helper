@@ -83,7 +83,7 @@ def extract_screenshots(pdf_file_path, output_dir):
     # Save PDF pages as images in output directory
     buffer = []
     for i in range(len(images)):
-        image_file_name = output_dir + '/page_'+ str(i) +'.jpg'
+        image_file_name = os.path.join(output_dir, 'page_'+ str(i) +'.jpg')
         images[i].save(image_file_name, 'JPEG')
 
         page_details = create_page_details(i, { "screenshot-file": image_file_name })
