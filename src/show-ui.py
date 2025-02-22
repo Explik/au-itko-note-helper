@@ -9,35 +9,44 @@ def page_to_html(page, number_of_pages):
 
     return f"""<img src="data:image/png;base64,{encoded_string}" style="width:100%;"><p>Page {page['page_number']} / {number_of_pages}"""
 
-def create_copy_txt_button(text, content): 
+def image_to_html(image_path):
+    with open(image_path, "rb") as image_file:
+        encoded_string = base64.b64encode(image_file.read()).decode()
+
+    return f"""<img src="data:image/png;base64,{encoded_string}" style="width:100%;">"""
+
+def create_copy_button(text, html_content):
+    with open('./src/copy-button.html', 'r') as file:
+        copy_button_html = file.read()
+    
+    return copy_button_html \
+        .replace("BUTTON_TEXT", text) \
+        .replace("HTML_CONTENT", json.dumps(html_content))
+
+def create_copy_text_button(text): 
     text_path = get_current_page()['text-file']
     with open(text_path, "r", encoding="utf-8") as text_file:
         content = text_file.read()
 
-    with open('./src/copy-text-button.html', 'r') as file:
-        copy_button_html = file.read()
-        return copy_button_html.replace("TEXT_CONTENT", json.dumps(content)).replace("BUTTON_TEXT", text)
+    return create_copy_button(text, content)
 
-def create_copy_image_button(text, content): 
+def create_copy_image_button(text): 
     image_path = get_current_page()['screenshot-file']
+    image_html = image_to_html(image_path)
 
-    with open(image_path, "rb") as image_file:
-        encoded_string = base64.b64encode(image_file.read()).decode()
-    content = f"data:image/png;base64,{encoded_string}"
+    return create_copy_button(text, image_html)
 
-    with open('./src/copy-image-button.html', 'r') as file:
-        copy_button_html = file.read()
-        return copy_button_html.replace("IMAGE_CONTENT", json.dumps(content)).replace("BUTTON_TEXT", text)
-
-def create_copy_html_button(text, content): 
+def create_copy_button_source(text): 
     html_path = get_current_page()['html-file']
 
     with open(html_path, "r", encoding="utf-8") as html_file:
-        content = html_file.read()
+        html_content = html_file.read()
 
-    with open('./src/copy-html-button.html', 'r') as file:
-        copy_button_html = file.read()
-        return copy_button_html.replace("HTML_CONTENT", json.dumps(content)).replace("BUTTON_TEXT", text)
+    return create_copy_button(text, html_content)
+
+
+
+
 
 # Load data 
 page_details = None 
@@ -77,6 +86,6 @@ with main_col1:
             navigate('next')
 
 with main_col2:
-    st.components.v1.html(create_copy_txt_button("Copy Text", "Hello world"), height=50)
-    st.components.v1.html(create_copy_image_button("Copy Image", "Hello world 2"), height=50)
-    st.components.v1.html(create_copy_html_button("Copy HTML", "Hello world 3"), height=50)
+    st.components.v1.html(create_copy_text_button("Copy Text"), height=50)
+    st.components.v1.html(create_copy_image_button("Copy Image"), height=50)
+    st.components.v1.html(create_copy_button_source("Copy HTML"), height=50)
