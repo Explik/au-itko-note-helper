@@ -29,6 +29,16 @@ def create_copy_image_button(text, content):
         copy_button_html = file.read()
         return copy_button_html.replace("IMAGE_CONTENT", json.dumps(content)).replace("BUTTON_TEXT", text)
 
+def create_copy_html_button(text, content): 
+    html_path = get_current_page()['html-file']
+
+    with open(html_path, "r", encoding="utf-8") as html_file:
+        content = html_file.read()
+
+    with open('./src/copy-html-button.html', 'r') as file:
+        copy_button_html = file.read()
+        return copy_button_html.replace("HTML_CONTENT", json.dumps(content)).replace("BUTTON_TEXT", text)
+
 # Load data 
 page_details = None 
 with open('./output/pages.json', 'r') as file:
@@ -69,3 +79,4 @@ with main_col1:
 with main_col2:
     st.components.v1.html(create_copy_txt_button("Copy Text", "Hello world"), height=50)
     st.components.v1.html(create_copy_image_button("Copy Image", "Hello world 2"), height=50)
+    st.components.v1.html(create_copy_html_button("Copy HTML", "Hello world 3"), height=50)

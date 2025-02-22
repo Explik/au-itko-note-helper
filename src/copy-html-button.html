@@ -1,0 +1,16 @@
+<script>
+    function copyHtmlToClipboard() {
+        var html = HTML_CONTENT; 
+
+        const clipboardItem = new ClipboardItem({ 
+        'text/html': new Blob([html], { type: 'text/html' }),
+        'text/plain': new Blob([html], { type: 'text/plain' })
+        });
+
+        navigator.clipboard.write([clipboardItem])
+        .then(() => console.log("clipboard.write() Ok"))
+        .catch(error => alert(error))
+    }
+</script>
+
+<button onclick="copyHtmlToClipboard()">BUTTON_TEXT</button>
