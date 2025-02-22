@@ -168,10 +168,19 @@ def split_single_html_file(html_file_path: str, output_dir: str):
                 page_text = page.get_text().replace("  ", " ").strip()
                 output_file.write(page_text)
 
+            # Find images 
+            image_file_paths = []
+            for img in page.find_all("img"):
+                img_src = img.get("src")
+                if img_src:
+                    image_file_path = os.path.join(output_dir, img_src)
+                    image_file_paths.append(image_file_path)
+
             # Create page details 
             page_details = create_page_details(int(page_id), { 
                 "html-file": output_html_file_path, 
-                "text-file": output_text_file_path 
+                "text-file": output_text_file_path,
+                "image-files": image_file_paths
             })
             buffer.append(page_details)
 

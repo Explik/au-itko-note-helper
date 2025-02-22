@@ -18,6 +18,9 @@ def image_file_to_html(image_path):
 
     return f"""<img src="data:image/png;base64,{encoded_string}" style="width:100%;">"""
 
+def image_files_to_html(image_paths):
+    return "".join([image_file_to_html(image_path) for image_path in image_paths])
+
 def html_file_to_html(html_path):
     with open(html_path, "r", encoding="utf-8") as html_file:
         html_content = html_file.read()
@@ -48,18 +51,23 @@ def create_copy_button(text, html_content):
 
 def create_copy_text_button(text): 
     text_path = get_current_page()['text-file']
-    with open(text_path, "r", encoding="utf-8") as text_file:
-        content = text_file.read()
+    content = text_file_to_html(text_path)
 
     return create_copy_button(text, content)
 
-def create_copy_image_button(text): 
+def create_copy_images_button(text):
+    image_paths = get_current_page()['image-files']
+    image_html = image_files_to_html(image_paths)
+
+    return create_copy_button(text, image_html)
+
+def create_copy_screenshot_button(text): 
     image_path = get_current_page()['screenshot-file']
     image_html = image_file_to_html(image_path)
 
     return create_copy_button(text, image_html)
 
-def create_copy_button_source(text): 
+def create_copy_html_button_source(text): 
     html_path = get_current_page()['html-file']
     html_content = html_file_to_html(html_path)
 
@@ -78,7 +86,7 @@ if 'page_index' not in st.session_state:
 
 # SessionState 
 # - page_index: index of the current page
-# - mode: current mode (screenshot, text, html)
+# - mode: current mode (screenshot, text, images, html)
 def set_mode(mode): 
     st.session_state.mode = mode
 
@@ -113,6 +121,8 @@ def get_current_page_html():
         return text_file_to_html(get_current_page()['text-file'])
     if mode == "html":
         return html_file_to_html(get_current_page()['html-file'])
+    if mode == "images":
+        return image_files_to_html(get_current_page()['image-files'])
 
     return "Error, invalid mode"
 
@@ -166,9 +176,10 @@ with main_col1:
         st.button('➡️', use_container_width=True, on_click=lambda: navigate('next'))
 
 with main_col2:
-    st.components.v1.html(create_copy_image_button("Copy screenshot"), height=32)
-    st.components.v1.html(create_copy_button_source("Copy text/images"), height=32)
+    st.components.v1.html(create_copy_screenshot_button("Copy screenshot"), height=32)
+    st.components.v1.html(create_copy_html_button_source("Copy text/images"), height=32)
     st.components.v1.html(create_copy_text_button("Copy text-only"), height=32)
+    st.components.v1.html(create_copy_images_button("Copy images-only"), height=32)
 
     st.checkbox("Default view", True, key="default_view")
     
@@ -176,3 +187,4 @@ with main_col3:
     st.button("View", key="view_image", disabled=get_mode() == "screenshot", on_click=lambda: set_mode("screenshot"))
     st.button("View", key="view_html", disabled=get_mode() == "html", on_click=lambda: set_mode("html"))
     st.button("View", key="view_text", disabled=get_mode() == "text", on_click=lambda: set_mode("text"))
+    st.button("View", key="view_images", disabled=get_mode() == "images", on_click=lambda: set_mode("images"))
