@@ -9,11 +9,22 @@ def page_to_html(page, number_of_pages):
 
     return f"""<img src="data:image/png;base64,{encoded_string}" style="width:100%;"><p>Page {page['page_number']} / {number_of_pages}"""
 
-def image_to_html(image_path):
+def text_file_to_html(text_path):
+    with open(text_path, "r", encoding="utf-8") as text_file:
+        content = text_file.read()
+
+    return f"""<p> {content} </p> """
+
+def image_file_to_html(image_path):
     with open(image_path, "rb") as image_file:
         encoded_string = base64.b64encode(image_file.read()).decode()
 
     return f"""<img src="data:image/png;base64,{encoded_string}" style="width:100%;">"""
+
+def html_file_to_html(html_path):
+    with open(html_path, "r", encoding="utf-8") as html_file:
+        html_content = html_file.read()
+    return html_content
 
 def create_copy_button(text, html_content):
     with open('./src/copy-button.html', 'r') as file:
@@ -32,7 +43,7 @@ def create_copy_text_button(text):
 
 def create_copy_image_button(text): 
     image_path = get_current_page()['screenshot-file']
-    image_html = image_to_html(image_path)
+    image_html = image_file_to_html(image_path)
 
     return create_copy_button(text, image_html)
 
@@ -44,48 +55,87 @@ def create_copy_button_source(text):
 
     return create_copy_button(text, html_content)
 
-
-
-
-
 # Load data 
 page_details = None 
 with open('./output/pages.json', 'r') as file:
     page_details = json.load(file)
 
-pages = [page_to_html(page, len(page_details)) for page in page_details]
-
 # Initialize session state for page index
 if 'page_index' not in st.session_state:
     st.session_state.page_index = 0
 
-# Function to navigate pages
-def navigate(direction):
-    if direction == 'next':
-        st.session_state.page_index = (st.session_state.page_index + 1) % len(pages)
-    elif direction == 'prev':
-        st.session_state.page_index = (st.session_state.page_index - 1) % len(pages)
+# State functions
 
+# SessionState 
+# - page_index: index of the current page
+# - mode: current mode (screenshot, text, html)
+def set_mode(mode): 
+    st.session_state.mode = mode
+
+def get_mode(): 
+    if 'mode' not in st.session_state: 
+        st.session_state.mode = "screenshot"
+
+    return st.session_state.mode
+
+def get_current_index():
+    return st.session_state.page_index
+
+def set_current_index(index):
+    st.session_state.page_index = index
+
+def use_default_view():
+    return st.session_state.default_view
+
+# Derivative state functions
 def get_current_page(): 
     return page_details[st.session_state.page_index]
 
+def get_current_page_html():
+    mode = get_mode()
+
+    if mode == "screenshot":
+        return image_file_to_html(get_current_page()['screenshot-file'])
+    if mode == "text":
+        return text_file_to_html(get_current_page()['text-file'])
+    if mode == "html":
+        return html_file_to_html(get_current_page()['html-file'])
+
+    return page_to_html(get_current_page(), len(page_details))
+
+def navigate(direction):
+    index = get_current_index() 
+
+    if direction == 'next':
+        set_current_index((index + 1) % len(page_details))
+    elif direction == 'prev':
+        set_current_index((index - 1) % len(page_details))
+
+    if use_default_view():
+        set_mode("screenshot")
+
 # Display current page
-main_col1, main_col2 = st.columns([3, 1])
+main_col1, main_col2, main_col3 = st.columns([3, 1, 1])
 
 with main_col1:
-    st.markdown(f"<div style='border: 2px solid black; padding: 10px;'>{pages[st.session_state.page_index]}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='border: 2px solid black; padding: 10px;'>{get_current_page_html()}</div>", unsafe_allow_html=True)
     st.text("")
 
     # Navigation buttons
     col1, col2, col3 = st.columns([1, 2, 1])
     with col1:
-        if st.button('⬅️ Previous', use_container_width=True):
-            navigate('prev')
+        st.button('⬅️ Previous', use_container_width=True, on_click=lambda: navigate('prev'))
     with col3:
-        if st.button('Next ➡️', use_container_width=True):
-            navigate('next')
+        st.button('Next ➡️', use_container_width=True, on_click=lambda: navigate('next'))
 
 with main_col2:
-    st.components.v1.html(create_copy_text_button("Copy Text"), height=50)
-    st.components.v1.html(create_copy_image_button("Copy Image"), height=50)
-    st.components.v1.html(create_copy_button_source("Copy HTML"), height=50)
+    st.components.v1.html(create_copy_image_button("Copy Image"), height=32)
+    st.components.v1.html(create_copy_button_source("Copy HTML"), height=32)
+    st.components.v1.html(create_copy_text_button("Copy Text"), height=32)
+
+    st.checkbox("Default view", True, key="default_view")
+    
+with main_col3: 
+    st.button("View", key="view_image", on_click=lambda: set_mode("screenshot"))
+    st.button("View", key="view_html", on_click=lambda: set_mode("html"))
+    st.button("View", key="view_text", on_click=lambda: set_mode("text"))
