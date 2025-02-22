@@ -6,7 +6,7 @@ import json
 import re
 from pathlib import Path
 
-from shared import create_dir_if_not_exists, extract_plain_text, extract_rich_text, extract_screenshots, generate_data
+from shared import create_dir_if_not_exists, extract_plain_text, extract_rich_text, extract_screenshots, generate_data, load_data_file
 import time
 import zipfile
 
@@ -216,12 +216,10 @@ working_dir = get_working_dir()
 
 if working_dir is not None:
     data_path = os.path.join(working_dir, 'data.json')
-
-    with open(data_path, 'r', encoding='utf-8') as file:
-        data = json.load(file)
-
-        file_name = data['file-name']
-        page_details = data['pages']
+    data = load_data_file(data_path)
+    
+    file_name = data['file-name']
+    page_details = data['pages']
 
 def get_current_page(): 
     current_index = get_current_index()

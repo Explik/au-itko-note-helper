@@ -69,8 +69,21 @@ def generate_data(file_path, *pages_list: list[list[dict]]):
     
     return {
         "file-name": os.path.basename(file_path),
+        "directory_separator": os.path.sep,
         "pages": combined_pages
     }
+
+def load_data_file(file_path):
+    with open(file_path, "r", encoding="utf-8") as f:
+        old_data = json.load(f)
+
+    old_directory_separator = old_data.get("directory_separator")
+    new_directory_separator = os.path.sep
+
+    new_json = json.dumps(old_data).replace(old_directory_separator, new_directory_separator)
+    new_data = json.loads(new_json)
+
+    return new_data
 
 # PDF extraction functions
 def extract_screenshots(pdf_file_path, output_dir): 
