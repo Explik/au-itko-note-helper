@@ -1,4 +1,5 @@
 import os
+import uuid
 import streamlit as st
 import base64
 import json
@@ -87,33 +88,35 @@ def create_copy_html_button_source(text):
     return create_copy_button(text, html_content)
 
 def start_long_process(pdf_file_path):
+    pdf_file_name = os.path.basename(pdf_file_path)
+
+    output_dir = ".\\output\\" + str(uuid.uuid4())
+    create_dir_if_not_exists(output_dir)
+
     st.markdown("### Processing file...")
     progress_bar = st.progress(0)
 
-    pdf_file_path = ".\\slides\\1-software-udvikling.pdf"
-    pdf_file_name = os.path.basename(pdf_file_path)
-
     # Extract screenshots, plain text, and rich text from PDF
     st.markdown("#### Extracting screenshots...")
-    screenshot_pages = extract_screenshots(pdf_file_path, '.\\output\\screenshots')
+    screenshot_pages = extract_screenshots(pdf_file_path, os.path.join(output_dir, 'screenshots'))
     progress_bar.progress(0.3)
 
     st.markdown("#### Extracting text...")
-    plain_text_pages = extract_plain_text(pdf_file_path, ".\\output\\text")
+    plain_text_pages = extract_plain_text(pdf_file_path, os.path.join(output_dir, "text"))
     progress_bar.progress(0.4)
 
     st.markdown("#### Extracting layout, image, texts...")
-    rich_text_pages = extract_rich_text(pdf_file_path, ".\\output")
+    rich_text_pages = extract_rich_text(pdf_file_path, output_dir)
     progress_bar.progress(0.9)
 
     # Combine all extraction metadata into a single JSON file
     st.markdown("#### Finalizing...")
     data = generate_data(pdf_file_name, screenshot_pages, rich_text_pages, plain_text_pages)
-    with open(".\\output\\data.json", "w", encoding="utf-8") as f:
+    with open(os.path.join(output_dir, "data.json"), "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
     progress_bar.progress(1.0)
 
-    set_working_dir(".\\output")
+    set_working_dir(output_dir)
     st.rerun()
 
 # SessionState 
@@ -220,7 +223,7 @@ def handle_page_input_change():
 # Display landing page 
 
 if working_dir is None:
-    st.markdown("# Note Helper")
+    st.markdown("# 📝 Note Helper")
     st.markdown("Upload a PDF file to get started.")
 
     uploaded_file = st.file_uploader("Choose a file", type=["pdf"])
