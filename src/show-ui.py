@@ -1,8 +1,12 @@
+import os
 import streamlit as st
 import base64
 import json
 import re
 from pathlib import Path
+
+from shared import create_dir_if_not_exists, extract_plain_text, extract_rich_text, extract_screenshots, generate_data
+import time
 
 st.set_page_config(layout="wide")
 
@@ -82,21 +86,48 @@ def create_copy_html_button_source(text):
 
     return create_copy_button(text, html_content)
 
-# Load data 
-with open('./output/data.json', 'r', encoding='utf-8') as file:
-    data = json.load(file)
-    file_name = data['file-name']
-    page_details = data['pages']
+def start_long_process(pdf_file_path):
+    st.markdown("### Processing file...")
+    progress_bar = st.progress(0)
 
-# Initialize session state for page index
-if 'page_index' not in st.session_state:
-    st.session_state.page_index = 0
+    pdf_file_path = ".\\slides\\1-software-udvikling.pdf"
+    pdf_file_name = os.path.basename(pdf_file_path)
 
-# State functions
+    # Extract screenshots, plain text, and rich text from PDF
+    st.markdown("#### Extracting screenshots...")
+    screenshot_pages = extract_screenshots(pdf_file_path, '.\\output\\screenshots')
+    progress_bar.progress(0.3)
+
+    st.markdown("#### Extracting text...")
+    plain_text_pages = extract_plain_text(pdf_file_path, ".\\output\\text")
+    progress_bar.progress(0.4)
+
+    st.markdown("#### Extracting layout, image, texts...")
+    rich_text_pages = extract_rich_text(pdf_file_path, ".\\output")
+    progress_bar.progress(0.9)
+
+    # Combine all extraction metadata into a single JSON file
+    st.markdown("#### Finalizing...")
+    data = generate_data(pdf_file_name, screenshot_pages, rich_text_pages, plain_text_pages)
+    with open(".\\output\\data.json", "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+    progress_bar.progress(1.0)
+
+    set_working_dir(".\\output")
+    st.rerun()
 
 # SessionState 
 # - page_index: index of the current page
 # - mode: current mode (screenshot, text, images, html)
+def set_working_dir(dir):
+    st.session_state.working_dir = dir
+
+def get_working_dir():
+    if 'working_dir' not in st.session_state:
+        st.session_state.working_dir = None
+
+    return st.session_state.working_dir
+
 def set_mode(mode): 
     st.session_state.mode = mode
 
@@ -107,6 +138,9 @@ def get_mode():
     return st.session_state.mode
 
 def get_current_index():
+    if 'page_index' not in st.session_state:
+        st.session_state.page_index = 0
+
     return st.session_state.page_index
 
 def set_current_index(index):
@@ -124,9 +158,24 @@ def get_add_heading():
 
     return st.session_state.add_heading
 
-# Derivative state functions
+# Load data 
+file_name = ""
+page_details = []
+
+working_dir = get_working_dir()
+
+if working_dir is not None:
+    data_path = os.path.join(working_dir, 'data.json')
+
+    with open(data_path, 'r', encoding='utf-8') as file:
+        data = json.load(file)
+
+        file_name = data['file-name']
+        page_details = data['pages']
+
 def get_current_page(): 
-    return page_details[st.session_state.page_index]
+    current_index = get_current_index()
+    return page_details[current_index]
 
 def get_current_page_html():
     mode = get_mode()
@@ -168,42 +217,63 @@ def handle_page_input_change():
     
     set_current_index(int(page_number) - 1)
 
-# Display current page
-st.markdown("# " + file_name)
+# Display landing page 
 
-main_col1, main_col2, main_col3 = st.columns([3, 1, 1])
+if working_dir is None:
+    st.markdown("# Note Helper")
+    st.markdown("Upload a PDF file to get started.")
 
-with main_col1:
-    st.markdown(f"<div style='border: 2px solid black; padding: 10px; height: 500px; overflow-y: scroll'>{get_current_page_html()}</div>", unsafe_allow_html=True)
-    st.text("")
+    uploaded_file = st.file_uploader("Choose a file", type=["pdf"])
 
-    # Navigation buttons
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col1:
-        st.button('⬅️', use_container_width=True, on_click=lambda: navigate('prev'))
+    if uploaded_file is not None:
+        create_dir_if_not_exists("files")
 
-    with col2:
-        st.text_input(
-            "Page number", 
-            f"{get_current_index() + 1} / {get_number_of_pages()}", 
-            key="page_input", 
-            label_visibility="collapsed",
-            on_change=handle_page_input_change)
+        file_path = f'files/{uploaded_file.name}'
     
-    with col3:
-        st.button('➡️', use_container_width=True, on_click=lambda: navigate('next'))
+        with open(file_path, 'wb') as out_file:
+            bytes_data = uploaded_file.read()
+            out_file.write(bytes_data)
+        
+        if st.button("Convert and Process"):
+            start_long_process(file_path)
 
-with main_col2:
-    st.components.v1.html(create_copy_screenshot_button("Copy screenshot"), height=32)
-    st.components.v1.html(create_copy_html_button_source("Copy text/images"), height=32)
-    st.components.v1.html(create_copy_text_button("Copy text-only"), height=32)
-    st.components.v1.html(create_copy_images_button("Copy images-only"), height=32)
+else: 
+    # Display PDF page
+    st.markdown("# " + file_name)
 
-    st.checkbox("Use default view (screenshot)", True, key="use_default_view")
-    st.checkbox("Add heading to screenshot", False, key="add_heading")
+    main_col1, main_col2, main_col3 = st.columns([3, 1, 1])
 
-with main_col3: 
-    st.button("View", key="view_image", disabled=get_mode() == "screenshot", on_click=lambda: set_mode("screenshot"))
-    st.button("View", key="view_html", disabled=get_mode() == "html", on_click=lambda: set_mode("html"))
-    st.button("View", key="view_text", disabled=get_mode() == "text", on_click=lambda: set_mode("text"))
-    st.button("View", key="view_images", disabled=get_mode() == "images", on_click=lambda: set_mode("images"))
+    with main_col1:
+        st.markdown(f"<div style='border: 2px solid black; padding: 10px; height: 500px; overflow-y: scroll'>{get_current_page_html()}</div>", unsafe_allow_html=True)
+        st.text("")
+
+        # Navigation buttons
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col1:
+            st.button('⬅️', use_container_width=True, on_click=lambda: navigate('prev'))
+
+        with col2:
+            st.text_input(
+                "Page number", 
+                f"{get_current_index() + 1} / {get_number_of_pages()}", 
+                key="page_input", 
+                label_visibility="collapsed",
+                on_change=handle_page_input_change)
+        
+        with col3:
+            st.button('➡️', use_container_width=True, on_click=lambda: navigate('next'))
+
+    with main_col2:
+        st.components.v1.html(create_copy_screenshot_button("Copy screenshot"), height=32)
+        st.components.v1.html(create_copy_html_button_source("Copy text/images"), height=32)
+        st.components.v1.html(create_copy_text_button("Copy text-only"), height=32)
+        st.components.v1.html(create_copy_images_button("Copy images-only"), height=32)
+
+        st.checkbox("Use default view (screenshot)", True, key="use_default_view")
+        st.checkbox("Add heading to screenshot", False, key="add_heading")
+
+    with main_col3: 
+        st.button("View", key="view_image", disabled=get_mode() == "screenshot", on_click=lambda: set_mode("screenshot"))
+        st.button("View", key="view_html", disabled=get_mode() == "html", on_click=lambda: set_mode("html"))
+        st.button("View", key="view_text", disabled=get_mode() == "text", on_click=lambda: set_mode("text"))
+        st.button("View", key="view_images", disabled=get_mode() == "images", on_click=lambda: set_mode("images"))

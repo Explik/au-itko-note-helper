@@ -1,4 +1,5 @@
 # import module
+import json
 from pdf2image import convert_from_path
 from pypdf import PdfReader
 from subprocess import Popen, PIPE, STDOUT
@@ -62,6 +63,14 @@ def combine_page_details(*pages_list: list[list[dict]]):
     buffer_list.sort(key=lambda x: x["page_number"])
 
     return buffer_list
+
+def generate_data(file_path, *pages_list: list[list[dict]]): 
+    combined_pages = combine_page_details(*pages_list)
+    
+    return {
+        "file-name": os.path.basename(file_path),
+        "pages": combined_pages
+    }
 
 # PDF extraction functions
 def extract_screenshots(pdf_file_path, output_dir): 
