@@ -9,23 +9,25 @@ def page_to_html(page, number_of_pages):
 
     return f"""<img src="data:image/png;base64,{encoded_string}" style="width:100%;"><p>Page {page['page_number']} / {number_of_pages}"""
 
+def create_copy_txt_button(text, content): 
+    text_path = get_current_page()['text-file']
+    with open(text_path, "r", encoding="utf-8") as text_file:
+        content = text_file.read()
 
-def create_copy_button_html(key, text, content): 
-    copy_script = """
-    <script>
-        function copyToClipboardFor{key}() {
-            navigator.clipboard.writeText({content}).then(function() {
-                console.log('Copied to clipboard successfully!');
-            }).catch(function(err) {
-                console.error('Could not copy text: ', err);
-            });
-        }
-    </script>
+    with open('./src/copy-text-button.html', 'r') as file:
+        copy_button_html = file.read()
+        return copy_button_html.replace("TEXT_CONTENT", json.dumps(content)).replace("BUTTON_TEXT", text)
 
-    <button onclick="copyToClipboardFor{key}()">{text}</button>
-    """
+def create_copy_image_button(text, content): 
+    image_path = get_current_page()['screenshot-file']
 
-    return copy_script.replace("{content}", json.dumps(content)).replace("{text}", text).replace("{key}", key)
+    with open(image_path, "rb") as image_file:
+        encoded_string = base64.b64encode(image_file.read()).decode()
+    content = f"data:image/png;base64,{encoded_string}"
+
+    with open('./src/copy-image-button.html', 'r') as file:
+        copy_button_html = file.read()
+        return copy_button_html.replace("IMAGE_CONTENT", json.dumps(content)).replace("BUTTON_TEXT", text)
 
 # Load data 
 page_details = None 
@@ -65,5 +67,5 @@ with main_col1:
             navigate('next')
 
 with main_col2:
-    st.components.v1.html(create_copy_button_html("copy_1", "Copy", "Hello world"), height=50)
-    st.components.v1.html(create_copy_button_html("copy_2", "Copy", "Hello world 2"), height=50)
+    st.components.v1.html(create_copy_txt_button("Copy Text", "Hello world"), height=50)
+    st.components.v1.html(create_copy_image_button("Copy Image", "Hello world 2"), height=50)

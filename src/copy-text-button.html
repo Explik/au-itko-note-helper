@@ -1,0 +1,13 @@
+<script>
+    function copyTextToClipboard() {
+        navigator.clipboard.writeText(TEXT_CONTENT).then(function() {
+            console.log('Copied to clipboard successfully!');
+        }).catch(function(err) {
+            console.error('Could not copy text: ', err);
+        });
+    }
+
+    console.log("Hello from copy-util.js again");
+</script>
+
+<button onclick="copyTextToClipboard()">BUTTON_TEXT</button>
