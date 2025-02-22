@@ -83,9 +83,10 @@ def create_copy_html_button_source(text):
     return create_copy_button(text, html_content)
 
 # Load data 
-page_details = None
-with open('./output/pages.json', 'r', encoding='utf-8') as file:
-    page_details = json.load(file)
+with open('./output/data.json', 'r', encoding='utf-8') as file:
+    data = json.load(file)
+    file_name = data['file-name']
+    page_details = data['pages']
 
 # Initialize session state for page index
 if 'page_index' not in st.session_state:
@@ -168,6 +169,8 @@ def handle_page_input_change():
     set_current_index(int(page_number) - 1)
 
 # Display current page
+st.markdown("# " + file_name)
+
 main_col1, main_col2, main_col3 = st.columns([3, 1, 1])
 
 with main_col1:

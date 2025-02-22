@@ -1,7 +1,9 @@
 from shared import combine_page_details, extract_plain_text, extract_rich_text, extract_screenshots
 import json
+import os
 
 pdf_file_path = ".\\slides\\1-software-udvikling.pdf"
+pdf_file_name = os.path.basename(pdf_file_path)
 
 # Extract screenshots, plain text, and rich text from PDF
 screenshot_pages = extract_screenshots(pdf_file_path, '.\\output\\screenshots')
@@ -17,6 +19,11 @@ print("Rich text extracted")
 combined_pages = combine_page_details(screenshot_pages, rich_text_pages, plain_text_pages)
 print(combined_pages)
 
-with open(".\\output\\pages.json", "w", encoding="utf-8") as f:
-    json.dump(combined_pages, f, ensure_ascii=False, indent=4)
-print("Combined pages saved to pages.json")
+data = {
+    "file-name": pdf_file_name,
+    "pages": combined_pages
+}
+
+with open(".\\output\\data.json", "w", encoding="utf-8") as f:
+    json.dump(data, f, ensure_ascii=False, indent=4)
+print("Data file created")
