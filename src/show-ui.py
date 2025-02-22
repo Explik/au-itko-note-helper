@@ -8,6 +8,7 @@ from pathlib import Path
 
 from shared import create_dir_if_not_exists, extract_plain_text, extract_rich_text, extract_screenshots, generate_data
 import time
+import zipfile
 
 st.set_page_config(layout="wide")
 
@@ -87,7 +88,7 @@ def create_copy_html_button_source(text):
 
     return create_copy_button(text, html_content)
 
-def start_long_process(pdf_file_path):
+def start_processing_pdf_file(pdf_file_path):
     pdf_file_name = os.path.basename(pdf_file_path)
 
     output_dir = ".\\output\\" + str(uuid.uuid4())
@@ -118,6 +119,24 @@ def start_long_process(pdf_file_path):
 
     set_working_dir(output_dir)
     st.rerun()
+
+def start_processing_zip_file(zip_file_path):
+    output_dir = ".\\output\\" + str(uuid.uuid4())
+    create_dir_if_not_exists(output_dir)
+
+    with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+        zip_ref.extractall(output_dir)
+
+    set_working_dir(output_dir)
+    st.rerun()
+
+def start_processing_any_file(file_path):
+    if file_path.endswith('.pdf'):
+        start_processing_pdf_file(file_path)
+    elif file_path.endswith('.zip'):
+        start_processing_zip_file(file_path)
+    
+    raise ValueError("Invalid file type")
 
 # SessionState 
 # - page_index: index of the current page
@@ -221,27 +240,27 @@ def handle_page_input_change():
     set_current_index(int(page_number) - 1)
 
 # Display landing page 
-
 if working_dir is None:
     st.markdown("# 📝 Note Helper")
     st.markdown("Upload a PDF file to get started.")
 
-    uploaded_file = st.file_uploader("Choose a file", type=["pdf"])
+    uploaded_file = st.file_uploader("Choose a file", type=["pdf", "zip"])
 
     if uploaded_file is not None:
-        create_dir_if_not_exists("files")
+        upload_dir = "uploads"
 
-        file_path = f'files/{uploaded_file.name}'
+        create_dir_if_not_exists(upload_dir)
+        file_path = os.path.join(upload_dir, uploaded_file.name)
     
         with open(file_path, 'wb') as out_file:
             bytes_data = uploaded_file.read()
             out_file.write(bytes_data)
         
         if st.button("Convert and Process"):
-            start_long_process(file_path)
+            start_processing_any_file(file_path)
 
+# Display PDF page
 else: 
-    # Display PDF page
     st.markdown("# " + file_name)
 
     main_col1, main_col2, main_col3 = st.columns([3, 1, 1])
