@@ -82,6 +82,9 @@ def get_current_index():
     return st.session_state.page_index
 
 def set_current_index(index):
+    if index < 0 or index >= get_number_of_pages():
+        return
+
     st.session_state.page_index = index
 
 def use_default_view():
@@ -103,16 +106,31 @@ def get_current_page_html():
 
     return page_to_html(get_current_page(), len(page_details))
 
+def get_number_of_pages():
+    return len(page_details)
+
 def navigate(direction):
     index = get_current_index() 
+    max_index = get_number_of_pages()
 
     if direction == 'next':
-        set_current_index((index + 1) % len(page_details))
+        set_current_index((index + 1) % max_index)
     elif direction == 'prev':
-        set_current_index((index - 1) % len(page_details))
+        set_current_index((index - 1) % max_index)
 
     if use_default_view():
         set_mode("screenshot")
+
+def handle_page_input_change():
+    page_input = st.session_state.page_input
+    if not page_input:
+        return
+
+    page_number = page_input.split(' / ')[0].strip()
+    if not page_number.isdigit():
+        return
+    
+    set_current_index(int(page_number) - 1)
 
 # Display current page
 main_col1, main_col2, main_col3 = st.columns([3, 1, 1])
@@ -124,9 +142,18 @@ with main_col1:
     # Navigation buttons
     col1, col2, col3 = st.columns([1, 2, 1])
     with col1:
-        st.button('⬅️ Previous', use_container_width=True, on_click=lambda: navigate('prev'))
+        st.button('⬅️', use_container_width=True, on_click=lambda: navigate('prev'))
+
+    with col2:
+        st.text_input(
+            "", 
+            f"{get_current_index() + 1} / {get_number_of_pages()}", 
+            key="page_input", 
+            label_visibility="collapsed",
+            on_change=handle_page_input_change)
+    
     with col3:
-        st.button('Next ➡️', use_container_width=True, on_click=lambda: navigate('next'))
+        st.button('➡️', use_container_width=True, on_click=lambda: navigate('next'))
 
 with main_col2:
     st.components.v1.html(create_copy_image_button("Copy Image"), height=32)
