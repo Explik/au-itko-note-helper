@@ -124,8 +124,14 @@ def start_processing_zip_file(zip_file_path):
     output_dir = os.path.join(".\\output\\", str(uuid.uuid4()))
     create_dir_if_not_exists(output_dir)
 
+    print(f"Extracting {zip_file_path} to {output_dir}")
     with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
         zip_ref.extractall(output_dir)
+
+    extracted_items = os.listdir(output_dir)
+    print("Extracted items:")
+    for item in extracted_items:
+        print(f"- {item}")
 
     set_working_dir(output_dir)
     st.rerun()
