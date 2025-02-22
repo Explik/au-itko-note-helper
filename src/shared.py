@@ -176,11 +176,20 @@ def split_single_html_file(html_file_path: str, output_dir: str):
                     image_file_path = os.path.join(output_dir, img_src)
                     image_file_paths.append(image_file_path)
 
+            # Find first heading 
+            first_heading = None
+            for level in range(1, 7):
+                heading_tag = page.find(f"h{level}")
+                if heading_tag:
+                    first_heading = heading_tag.get_text().strip()
+                    break
+
             # Create page details 
             page_details = create_page_details(int(page_id), { 
                 "html-file": output_html_file_path, 
                 "text-file": output_text_file_path,
-                "image-files": image_file_paths
+                "image-files": image_file_paths,
+                "first-heading": first_heading
             })
             buffer.append(page_details)
 

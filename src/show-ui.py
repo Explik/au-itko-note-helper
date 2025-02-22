@@ -42,19 +42,21 @@ def html_file_to_html(html_path):
 
     return html_content
 
-def create_copy_button(text, html_content):
+def create_copy_button(text, html_content, text_content = ""):
     with open('./src/copy-button.html', 'r') as file:
         copy_button_html = file.read()
     
     return copy_button_html \
         .replace("BUTTON_TEXT", text) \
-        .replace("HTML_CONTENT", json.dumps(html_content))
+        .replace("HTML_CONTENT", json.dumps(html_content)) \
+        .replace("TEXT_CONTENT", json.dumps(text_content))
 
 def create_copy_text_button(text): 
     text_path = get_current_page()['text-file']
-    content = text_file_to_html(text_path)
+    html_content = text_file_to_html(text_path)
+    txt_content = html_content.replace("<p>", "").replace("</p>", "").strip()
 
-    return create_copy_button(text, content)
+    return create_copy_button(text, html_content, txt_content)
 
 def create_copy_images_button(text):
     image_paths = get_current_page()['image-files']
@@ -66,6 +68,12 @@ def create_copy_screenshot_button(text):
     image_path = get_current_page()['screenshot-file']
     image_html = image_file_to_html(image_path)
 
+    if get_add_heading():
+        heading = get_current_page()['first-heading']
+
+        if heading is not None:
+            image_html = f"<h1>{heading}</h1>" + image_html
+
     return create_copy_button(text, image_html)
 
 def create_copy_html_button_source(text): 
@@ -75,8 +83,8 @@ def create_copy_html_button_source(text):
     return create_copy_button(text, html_content)
 
 # Load data 
-page_details = None 
-with open('./output/pages.json', 'r') as file:
+page_details = None
+with open('./output/pages.json', 'r', encoding='utf-8') as file:
     page_details = json.load(file)
 
 # Initialize session state for page index
@@ -107,7 +115,13 @@ def set_current_index(index):
     st.session_state.page_index = index
 
 def use_default_view():
-    return st.session_state.default_view
+    return st.session_state.use_default_view
+
+def get_add_heading():
+    if 'add_heading' not in st.session_state: 
+        st.session_state.add_heading = False
+
+    return st.session_state.add_heading
 
 # Derivative state functions
 def get_current_page(): 
@@ -182,8 +196,9 @@ with main_col2:
     st.components.v1.html(create_copy_text_button("Copy text-only"), height=32)
     st.components.v1.html(create_copy_images_button("Copy images-only"), height=32)
 
-    st.checkbox("Use default view (screenshot)", True, key="default_view")
-    
+    st.checkbox("Use default view (screenshot)", True, key="use_default_view")
+    st.checkbox("Add heading to screenshot", False, key="add_heading")
+
 with main_col3: 
     st.button("View", key="view_image", disabled=get_mode() == "screenshot", on_click=lambda: set_mode("screenshot"))
     st.button("View", key="view_html", disabled=get_mode() == "html", on_click=lambda: set_mode("html"))
