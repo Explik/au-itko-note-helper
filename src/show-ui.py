@@ -110,15 +110,15 @@ def start_processing_pdf_file(pdf_file_path):
 
     # Extract screenshots, plain text, and rich text from PDF
     st.markdown("#### Extracting screenshots...")
-    screenshot_pages = extract_screenshots(pdf_file_path, os.path.join(output_dir, 'screenshots'))
+    screenshot_pages = extract_screenshots(pdf_file_path, output_dir, 'screenshots')
     progress_bar.progress(0.3)
 
     st.markdown("#### Extracting text...")
-    plain_text_pages = extract_plain_text(pdf_file_path, os.path.join(output_dir, "text"))
+    plain_text_pages = extract_plain_text(pdf_file_path, output_dir, "text")
     progress_bar.progress(0.4)
 
     st.markdown("#### Extracting layout, image, texts...")
-    rich_text_pages = extract_rich_text(pdf_file_path, output_dir)
+    rich_text_pages = extract_rich_text(pdf_file_path, output_dir, 'html')
     progress_bar.progress(0.9)
 
     # Combine all extraction metadata into a single JSON file
