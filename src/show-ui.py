@@ -166,13 +166,13 @@ with main_col1:
         st.button('➡️', use_container_width=True, on_click=lambda: navigate('next'))
 
 with main_col2:
-    st.components.v1.html(create_copy_image_button("Copy Image"), height=32)
-    st.components.v1.html(create_copy_button_source("Copy HTML"), height=32)
-    st.components.v1.html(create_copy_text_button("Copy Text"), height=32)
+    st.components.v1.html(create_copy_image_button("Copy screenshot"), height=32)
+    st.components.v1.html(create_copy_button_source("Copy text/images"), height=32)
+    st.components.v1.html(create_copy_text_button("Copy text-only"), height=32)
 
     st.checkbox("Default view", True, key="default_view")
     
 with main_col3: 
-    st.button("View", key="view_image", on_click=lambda: set_mode("screenshot"))
-    st.button("View", key="view_html", on_click=lambda: set_mode("html"))
-    st.button("View", key="view_text", on_click=lambda: set_mode("text"))
+    st.button("View", key="view_image", disabled=get_mode() == "screenshot", on_click=lambda: set_mode("screenshot"))
+    st.button("View", key="view_html", disabled=get_mode() == "html", on_click=lambda: set_mode("html"))
+    st.button("View", key="view_text", disabled=get_mode() == "text", on_click=lambda: set_mode("text"))
