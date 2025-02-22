@@ -120,18 +120,27 @@ def start_processing_pdf_file(pdf_file_path):
     set_working_dir(output_dir)
     st.rerun()
 
+def list_items_recursively(directory, max_items=5, level=0):
+    items = os.listdir(directory)
+    for i, item in enumerate(items):
+        if i >= max_items:
+            print("  " * level + "...")
+            break
+        item_path = os.path.join(directory, item)
+        print("  " * level + f"- {item}")
+        if os.path.isdir(item_path):
+            list_items_recursively(item_path, max_items, level + 1)
+
 def start_processing_zip_file(zip_file_path):
-    output_dir = os.path.join(".\\output\\", str(uuid.uuid4()))
+    output_dir = os.path.join(".\\output", str(uuid.uuid4()))
     create_dir_if_not_exists(output_dir)
 
     print(f"Extracting {zip_file_path} to {output_dir}")
     with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
         zip_ref.extractall(output_dir)
 
-    extracted_items = os.listdir(output_dir)
-    print("Extracted items:")
-    for item in extracted_items:
-        print(f"- {item}")
+    print("Extracted items: ")
+    list_items_recursively(output_dir)
 
     set_working_dir(output_dir)
     st.rerun()
