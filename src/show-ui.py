@@ -49,7 +49,8 @@ def html_file_to_html(html_path):
     return html_content
 
 def create_copy_button(text, html_content, text_content = ""):
-    with open('./src/copy-button.html', 'r') as file:
+    file_path = os.path.join(".", "src", "copy-button.html")
+    with open(file_path, 'r') as file:
         copy_button_html = file.read()
     
     return copy_button_html \
@@ -91,7 +92,7 @@ def create_copy_html_button_source(text):
 def start_processing_pdf_file(pdf_file_path):
     pdf_file_name = os.path.basename(pdf_file_path)
 
-    output_dir = os.path.join(".\\output", str(uuid.uuid4()))
+    output_dir = os.path.join(".", "output", str(uuid.uuid4()))
     create_dir_if_not_exists(output_dir)
 
     st.markdown("### Processing file...")
@@ -132,7 +133,7 @@ def list_items_recursively(directory, max_items=5, level=0):
             list_items_recursively(item_path, max_items, level + 1)
 
 def start_processing_zip_file(zip_file_path):
-    output_dir = os.path.join(".\\output", str(uuid.uuid4()))
+    output_dir = os.path.join(".", "output", str(uuid.uuid4()))
     create_dir_if_not_exists(output_dir)
 
     print(f"Extracting {zip_file_path} to {output_dir}")

@@ -8,7 +8,7 @@ pdf_file_path = ".\\slides\\1-software-udvikling.pdf"
 pdf_file_name = os.path.basename(pdf_file_path)
 pdf_file_dir = os.path.dirname(pdf_file_path)
 
-output_dir = os.path.join(".\\output", str(uuid.uuid4()))
+output_dir = os.path.join(".", "output", str(uuid.uuid4()))
 
 # Extract screenshots, plain text, and rich text from PDF
 screenshot_pages = extract_screenshots(pdf_file_path, os.path.join(output_dir, 'screenshots'))
