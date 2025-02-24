@@ -4,6 +4,7 @@ import json
 import os
 import sys
 import shutil
+import argparse
 
 def process_file(pdf_file_path, working_dir, output_dir):
     pdf_file_name = os.path.basename(pdf_file_path)
@@ -49,46 +50,20 @@ def main(path, working_directory, output_directory):
             process_file(os.path.join(path, csv_file), working_directory, output_directory)
     else:
         if not os.path.isfile(path):
-            print('The provided path is not a valid file or directory')
+            print('The provided path is not a valid file or directory (path ' + path + ')')
             sys.exit(1)
         process_file(path, working_directory, output_directory)
 
 if __name__ == "__main__":
-    # Get csv/directory path from arguments 
-    file_path = None 
-    if len(sys.argv) > 1:
-        file_path = sys.argv[1]
-    else: 
-        print('Please provide a path to a PDF file')
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description='Process a PDF file.')
+    parser.add_argument('file_path', type=str, help='Path to the PDF file or directory containing PDF files')
+    parser.add_argument('--working-directory', type=str, help='Path to the working directory')
+    parser.add_argument('--output-directory', type=str, help='Path to the output directory')
 
-    # Check for optional arguments 
-    # --working-directory [path]
-    working_directory = os.path.join(".", "temporary", str(uuid.uuid4()))
-    if '--working-directory' in sys.argv:
-        working_directory = sys.argv.index('--working-directory') + 1
-        if working_directory < len(sys.argv):
-            working_directory = sys.argv[working_directory]
+    args = parser.parse_args()
 
-            if "--" in working_directory:
-                print('Please provide a valid working directory path')
-                sys.exit(1)
-        else:
-            print('Please provide a valid working directory path')
-            sys.exit(1)
-
-    # --output-directory [path]
-    output_directory = os.path.dirname(file_path)
-    if '--output-directory' in sys.argv:
-        output_index = sys.argv.index('--output-directory') + 1
-        if output_index < len(sys.argv):
-            output_directory = sys.argv[output_index]
-
-            if "--" in output_directory:
-                print('Please provide a valid output directory path')
-                sys.exit(1)
-        else:
-            print('Please provide a valid output directory path')
-            sys.exit(1)
+    file_path = args.file_path
+    working_directory = args.working_directory if args.working_directory else os.path.join(".", "temporary", str(uuid.uuid4()))
+    output_directory = args.output_directory if args.output_directory else os.path.dirname(file_path)
 
     main(file_path, working_directory, output_directory)
