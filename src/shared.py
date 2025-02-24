@@ -29,7 +29,10 @@ def run_command(command):
     
     with process.stdout:
         for line in iter(process.stdout.readline, b''):
-            print(line.decode("utf-8").strip())
+            try:
+                print(line.decode("utf-8").strip())
+            except UnicodeDecodeError:
+                print("Error decoding the output.")
 
     return process.wait()
 
