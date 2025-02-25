@@ -71,6 +71,7 @@ def generate_data(file_path, *pages_list: list[list[dict]]):
     combined_pages = combine_page_details(*pages_list)
     
     return {
+        "version": "1.0.0",
         "file-name": os.path.basename(file_path),
         "directory_separator": os.path.sep,
         "pages": combined_pages
